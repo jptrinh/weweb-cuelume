@@ -16,13 +16,17 @@ Because the listeners are delegated, elements added later (collection lists, mod
 
 The element binds to the app document via `wwLib.getFrontDocument()` rather than the global `document`, which in the editor is the editor's own document.
 
-### Why the binding is ported rather than upstream's
+### Two bindings, one per bundle
 
-`wwElement.vue` reimplements upstream's `bind()` instead of calling it. Upstream guards each delegated listener with `event.target instanceof Element`; inside the editor, this element's code and the canvas DOM are evaluated in *different realms*, so that check is always false and every event is silently dropped — no sound in the editor, while the published app (single realm) works fine. The port is a line-for-line equivalent that duck-types (`typeof target.closest === "function"`) instead, which holds in any realm. Sound synthesis, the recipes, and `play()` are still entirely upstream's.
+The published app calls upstream's `bind()`. The editor doesn't — it uses a port of it in `wwElement.vue`, selected at build time via WeWeb's strip blocks (`wwFront` for the app, `wwEditor` for the editor), so neither bundle contains the other's path.
 
-This should go away once [the upstream issue](https://github.com/Danilaa1/cuelume/issues) is resolved; at that point this file should go back to importing `bind()`.
+The reason is realms. Upstream guards each delegated listener with `event.target instanceof Element`, and `instanceof` only recognizes objects built from *its own realm's* constructor. In the editor this element is evaluated in a different realm from the canvas DOM, so the check is always false and every event is silently dropped — no sound at all. The published app is single-realm, so upstream's binding is fine there and runs untouched.
 
-One consequence: the listeners now attach on mount regardless of whether sounds are enabled, so a muted app pays the (negligible) cost of four delegated listeners. `setEnabled()` still gates playback.
+Confirmed by measurement, not inference: the same `event.target instanceof Element` probe reports `false` in the installed element and `true` when served from `npm run serve` (dev-served code is injected into the canvas realm via `window.addWwComponent`). Identical source, opposite results.
+
+The port is upstream's `bind()` with the realm-sensitive guards replaced — `typeof target.closest === "function"` for the target, and a truthiness check for `relatedTarget`, which is only ever passed to `contains()`. Everything else is unchanged, and synthesis, recipes and `play()` are entirely upstream's.
+
+Delete the port if `bind.js` ever stops using `instanceof`, and let the editor use upstream too.
 
 ### Constraint: one element per app
 

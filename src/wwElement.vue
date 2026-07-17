@@ -11,13 +11,15 @@
 
 <script>
 import { computed, onMounted, watch } from "vue";
-import { play, setEnabled, sounds } from "cuelume";
+import { bind, play, setEnabled, sounds } from "cuelume";
 
-// A realm-safe port of cuelume's own bind(). Upstream guards its delegated
-// listeners with `event.target instanceof Element`, but this element's code
-// and the app DOM sit in different realms inside the editor, where that check
-// is always false and every event is dropped. Duck-typing expresses the same
-// intent in any realm. Behaviour is otherwise identical to bind.js.
+/* wwEditor:start */
+// The editor evaluates this element in a different realm from the canvas DOM,
+// where upstream's `event.target instanceof Element` guard is always false and
+// every event is silently dropped. This is bind() re-expressed with duck-typing,
+// which holds in any realm; it exists only in the editor bundle, so the
+// published app runs upstream's own binding untouched. Delete it if bind.js
+// ever stops using instanceof.
 const HOVER_GAP_MS = 150;
 
 const BINDINGS = [
@@ -32,7 +34,6 @@ const handledEvents = new WeakSet();
 let lastHoverTime = -Infinity;
 
 const isElement = node => typeof node?.closest === "function";
-const isNode = node => typeof node?.nodeType === "number";
 
 function isMouse(event) {
   return (
@@ -56,8 +57,10 @@ function bindRoot(root) {
         if (mouseOnly && !isMouse(event)) return;
 
         if (type === "pointerenter") {
+          // relatedTarget is a Node or null, so truthiness is enough — and
+          // unlike `instanceof Node` it survives the realm boundary.
           const { relatedTarget } = event;
-          if (isNode(relatedTarget) && element.contains(relatedTarget)) return;
+          if (relatedTarget && element.contains(relatedTarget)) return;
           const now = performance.now();
           if (now - lastHoverTime < HOVER_GAP_MS) return;
           lastHoverTime = now;
@@ -71,6 +74,7 @@ function bindRoot(root) {
     );
   }
 }
+/* wwEditor:end */
 
 export default {
   props: {
@@ -91,8 +95,25 @@ export default {
       return enabled;
     });
 
-    watch(isActive, active => setEnabled(!!active), { immediate: true });
+    watch(
+      isActive,
+      active => {
+        setEnabled(!!active);
+        /* wwFront:start */
+        // Deferred until sounds are on, so an app that never unmutes keeps the
+        // delegated listeners — and their per-event cost — off the document.
+        // bind() is idempotent per root.
+        if (active) bind(wwLib.getFrontDocument());
+        /* wwFront:end */
+      },
+      { immediate: true }
+    );
+
+    /* wwEditor:start */
+    // Bound unconditionally: playback is still gated by setEnabled(), and the
+    // per-event cost is irrelevant while editing.
     onMounted(() => bindRoot(wwLib.getFrontDocument()));
+    /* wwEditor:end */
 
     return { isActive, playSound: play };
   },
