@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import { computed, watch } from "vue";
+import { computed, onMounted, onUpdated, watch } from "vue";
 import { bind, play, setEnabled } from "cuelume";
 
 export default {
@@ -32,19 +32,20 @@ export default {
       return enabled;
     });
 
-    watch(
-      isActive,
-      active => {
-        setEnabled(!!active);
-        // bind() is idempotent per root, so deferring it until sounds are
-        // actually on keeps the delegated listeners off the document — and
-        // off every pointer event — in apps that never unmute. It attaches to
-        // the app document, not the editor's, and never needs re-running as
-        // the DOM changes.
-        if (active) bind(wwLib.getFrontDocument());
-      },
-      { immediate: true }
-    );
+    watch(isActive, active => setEnabled(!!active), { immediate: true });
+
+    // bind() must not be tied to isActive: the editor can swap the front
+    // document underneath us, and a one-shot bind keyed on isActive changing
+    // can never recover — the listeners stay on a document that's been torn
+    // down. Re-binding on every render is a WeakSet lookup, since bind() is
+    // idempotent per root.
+    const rebind = () => {
+      const doc = wwLib.getFrontDocument();
+      console.log("[cuelume] bind", { doc, isActive: isActive.value });
+      bind(doc);
+    };
+    onMounted(rebind);
+    onUpdated(rebind);
 
     return { isActive, playSound: play };
   },
