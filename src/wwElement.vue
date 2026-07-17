@@ -41,7 +41,27 @@ export default {
     // idempotent per root.
     const rebind = () => {
       const doc = wwLib.getFrontDocument();
-      console.log("[cuelume] bind", { doc, isActive: isActive.value });
+      console.log("[cuelume] bind", {
+        sameDoc: doc === document,
+        sameRealm: doc.defaultView === window,
+        isActive: isActive.value,
+      });
+      // Mirrors every guard bind.js/engine.js applies, evaluated in this
+      // module's realm — the realm those guards actually resolve in.
+      doc.addEventListener(
+        "pointerenter",
+        event => {
+          if (!event.target?.closest?.("[data-cuelume-hover]")) return;
+          console.log("[cuelume] evt", {
+            targetIsElement: event.target instanceof Element,
+            targetIsFrontElement: event.target instanceof doc.defaultView.Element,
+            pointerType: event.pointerType,
+            matchesFineHover: window.matchMedia("(hover: hover) and (pointer: fine)").matches,
+            hasBeenActive: navigator.userActivation?.hasBeenActive,
+          });
+        },
+        true
+      );
       bind(doc);
     };
     onMounted(rebind);
