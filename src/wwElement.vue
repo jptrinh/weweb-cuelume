@@ -10,8 +10,67 @@
 </template>
 
 <script>
-import { computed, onMounted, onUpdated, watch } from "vue";
-import { bind, play, setEnabled } from "cuelume";
+import { computed, onMounted, watch } from "vue";
+import { play, setEnabled, sounds } from "cuelume";
+
+// A realm-safe port of cuelume's own bind(). Upstream guards its delegated
+// listeners with `event.target instanceof Element`, but this element's code
+// and the app DOM sit in different realms inside the editor, where that check
+// is always false and every event is dropped. Duck-typing expresses the same
+// intent in any realm. Behaviour is otherwise identical to bind.js.
+const HOVER_GAP_MS = 150;
+
+const BINDINGS = [
+  { type: "pointerenter", attr: "data-cuelume-hover", fallback: "chime", mouseOnly: true },
+  { type: "pointerdown", attr: "data-cuelume-press", fallback: "press", mouseOnly: false },
+  { type: "pointerup", attr: "data-cuelume-release", fallback: "release", mouseOnly: false },
+  { type: "click", attr: "data-cuelume-toggle", fallback: "toggle", mouseOnly: false },
+];
+
+const boundRoots = new WeakSet();
+const handledEvents = new WeakSet();
+let lastHoverTime = -Infinity;
+
+const isElement = node => typeof node?.closest === "function";
+const isNode = node => typeof node?.nodeType === "number";
+
+function isMouse(event) {
+  return (
+    event.pointerType === "mouse" &&
+    window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  );
+}
+
+function bindRoot(root) {
+  if (boundRoots.has(root)) return;
+  boundRoots.add(root);
+
+  for (const { type, attr, fallback, mouseOnly } of BINDINGS) {
+    root.addEventListener(
+      type,
+      event => {
+        if (handledEvents.has(event) || !isElement(event.target)) return;
+
+        const element = event.target.closest(`[${attr}]`);
+        if (!element || !root.contains(element)) return;
+        if (mouseOnly && !isMouse(event)) return;
+
+        if (type === "pointerenter") {
+          const { relatedTarget } = event;
+          if (isNode(relatedTarget) && element.contains(relatedTarget)) return;
+          const now = performance.now();
+          if (now - lastHoverTime < HOVER_GAP_MS) return;
+          lastHoverTime = now;
+        }
+
+        handledEvents.add(event);
+        const requested = element.getAttribute(attr);
+        play(sounds.includes(requested) ? requested : fallback);
+      },
+      true
+    );
+  }
+}
 
 export default {
   props: {
@@ -33,39 +92,7 @@ export default {
     });
 
     watch(isActive, active => setEnabled(!!active), { immediate: true });
-
-    // bind() must not be tied to isActive: the editor can swap the front
-    // document underneath us, and a one-shot bind keyed on isActive changing
-    // can never recover — the listeners stay on a document that's been torn
-    // down. Re-binding on every render is a WeakSet lookup, since bind() is
-    // idempotent per root.
-    const rebind = () => {
-      const doc = wwLib.getFrontDocument();
-      console.log("[cuelume] bind", {
-        sameDoc: doc === document,
-        sameRealm: doc.defaultView === window,
-        isActive: isActive.value,
-      });
-      // Mirrors every guard bind.js/engine.js applies, evaluated in this
-      // module's realm — the realm those guards actually resolve in.
-      doc.addEventListener(
-        "pointerenter",
-        event => {
-          if (!event.target?.closest?.("[data-cuelume-hover]")) return;
-          console.log("[cuelume] evt", {
-            targetIsElement: event.target instanceof Element,
-            targetIsFrontElement: event.target instanceof doc.defaultView.Element,
-            pointerType: event.pointerType,
-            matchesFineHover: window.matchMedia("(hover: hover) and (pointer: fine)").matches,
-            hasBeenActive: navigator.userActivation?.hasBeenActive,
-          });
-        },
-        true
-      );
-      bind(doc);
-    };
-    onMounted(rebind);
-    onUpdated(rebind);
+    onMounted(() => bindRoot(wwLib.getFrontDocument()));
 
     return { isActive, playSound: play };
   },

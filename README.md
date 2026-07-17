@@ -10,11 +10,19 @@ Sounds are synthesized on the fly rather than loaded, so the whole thing costs n
 
 ## What it does
 
-Cuelume is document-wide, not per-element. The library's `bind()` attaches four delegated, capture-phase listeners to the document and resolves attributes at event time. So this element is **an invisible initializer you drop once**, not a button or a sound emitter — you add `data-cuelume-*` attributes to whatever elements you want yourself.
+Cuelume is document-wide, not per-element: four delegated, capture-phase listeners on the document, resolving attributes at event time. So this element is **an invisible initializer you drop once**, not a button or a sound emitter — you add `data-cuelume-*` attributes to whatever elements you want yourself.
 
 Because the listeners are delegated, elements added later (collection lists, modals, anything conditional) work with no rescan or re-init.
 
-The element binds to the app document via `wwLib.getFrontDocument()` rather than the global `document`, which in the editor is the editor's own document. Binding is deferred until sounds are actually enabled, so an app with sounds off pays no per-event cost.
+The element binds to the app document via `wwLib.getFrontDocument()` rather than the global `document`, which in the editor is the editor's own document.
+
+### Why the binding is ported rather than upstream's
+
+`wwElement.vue` reimplements upstream's `bind()` instead of calling it. Upstream guards each delegated listener with `event.target instanceof Element`; inside the editor, this element's code and the canvas DOM are evaluated in *different realms*, so that check is always false and every event is silently dropped — no sound in the editor, while the published app (single realm) works fine. The port is a line-for-line equivalent that duck-types (`typeof target.closest === "function"`) instead, which holds in any realm. Sound synthesis, the recipes, and `play()` are still entirely upstream's.
+
+This should go away once [the upstream issue](https://github.com/Danilaa1/cuelume/issues) is resolved; at that point this file should go back to importing `bind()`.
+
+One consequence: the listeners now attach on mount regardless of whether sounds are enabled, so a muted app pays the (negligible) cost of four delegated listeners. `setEnabled()` still gates playback.
 
 ### Constraint: one element per app
 
