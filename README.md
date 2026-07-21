@@ -88,7 +88,7 @@ Note the CLI requires both `--name` and `--type`; `npm run build --name=cuelume`
 
 ## Credits
 
-- [**cuelume**](https://github.com/Danilaa1/cuelume) — the sound engine this element wraps, by [Daniel Belyi](https://github.com/Danilaa1) ([npm](https://www.npmjs.com/package/cuelume), MIT).
+- [**cuelume**](https://github.com/Danilaa1/cuelume) — the sound engine this element wraps, by [Daniel White](https://github.com/Danilaa1) ([npm](https://www.npmjs.com/package/cuelume), MIT).
 - WeWeb element wrapper by [jptrinh](https://github.com/jptrinh).
 
 The upstream library is MIT-licensed. If you find this useful, the credit belongs upstream — go star [Danilaa1/cuelume](https://github.com/Danilaa1/cuelume).
