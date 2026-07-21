@@ -4,7 +4,7 @@ A [WeWeb](https://www.weweb.io/) custom element that adds curated interaction so
 
 ## About
 
-This is a thin WeWeb wrapper around [**cuelume**](https://github.com/Danilaa1/cuelume) by [Daniel Belyi](https://github.com/Danilaa1). All the audio synthesis, the fourteen sound recipes, and the `data-cuelume-*` attribute binding are his work — this element only initializes the library inside a WeWeb page and surfaces its controls in the editor.
+This is a thin WeWeb wrapper around [**cuelume**](https://github.com/Danilaa1/cuelume) by [Daniel White](https://github.com/Danilaa1). All the audio synthesis, the fourteen sound recipes, and the `data-cuelume-*` attribute binding are his work — this element only initializes the library inside a WeWeb page and surfaces its controls in the editor.
 
 Sounds are synthesized on the fly rather than loaded, so the whole thing costs no network requests and ships no audio assets. Drop the element once on a page, tag any elements you want to make audible, and you're done.
 
