@@ -24,7 +24,7 @@ The reason is realms. Upstream guards each delegated listener with `event.target
 
 Confirmed by measurement, not inference: the same `event.target instanceof Element` probe reports `false` in the installed element and `true` when served from `npm run serve` (dev-served code is injected into the canvas realm via `window.addWwComponent`). Identical source, opposite results.
 
-The port is upstream's `bind()` with the realm-sensitive guards replaced — `typeof target.closest === "function"` for the target, and a truthiness check for `relatedTarget`, which is only ever passed to `contains()`. Everything else is unchanged, and synthesis, recipes and `play()` are entirely upstream's.
+The port is upstream's `bind()` with the realm-sensitive guards replaced — `typeof target.closest === "function"` for the target, and a truthiness check for `relatedTarget`, which is only ever passed to `contains()`. `window` is reached through `wwLib.getFrontWindow()` for the same reason the document is. Everything else is unchanged, and synthesis, recipes and `play()` are entirely upstream's.
 
 Delete the port if `bind.js` ever stops using `instanceof`, and let the editor use upstream too.
 

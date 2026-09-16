@@ -38,7 +38,9 @@ const isElement = node => typeof node?.closest === "function";
 function isMouse(event) {
   return (
     event.pointerType === "mouse" &&
-    window.matchMedia("(hover: hover) and (pointer: fine)").matches
+    wwLib
+      .getFrontWindow()
+      .matchMedia("(hover: hover) and (pointer: fine)").matches
   );
 }
 
@@ -61,7 +63,7 @@ function bindRoot(root) {
           // unlike `instanceof Node` it survives the realm boundary.
           const { relatedTarget } = event;
           if (relatedTarget && element.contains(relatedTarget)) return;
-          const now = performance.now();
+          const now = wwLib.getFrontWindow().performance.now();
           if (now - lastHoverTime < HOVER_GAP_MS) return;
           lastHoverTime = now;
         }
