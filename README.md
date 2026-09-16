@@ -51,7 +51,7 @@ Drop the Cuelume element on the page, then add attributes to your other elements
 
 Give an attribute a value to override the sound; leave it empty for the default. Unrecognized names are a silent no-op.
 
-Available sounds: `chime`, `sparkle`, `droplet`, `bloom`, `whisper`, `tick`, `press`, `release`, `toggle`, `success`, `error`, `page`, `loading`, `ready`. The editor dropdown derives this list from the library's own `sounds` export, so it stays in sync across version bumps.
+Available sounds: `chime`, `sparkle`, `droplet`, `bloom`, `whisper`, `tick`, `press`, `release`, `toggle`, `success`, `error`, `page`, `loading`, `ready`, `pulse`, `scan`, `arrival`. The editor dropdown derives this list from the library's own `sounds` export, so it stays in sync across version bumps.
 
 Browsers won't play anything until the user has interacted with the page at least once (the engine checks `navigator.userActivation`). A hover sound before any click is a deliberate no-op, not a bug.
 

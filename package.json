@@ -6,7 +6,7 @@
     "serve": "weweb serve"
   },
   "dependencies": {
-    "cuelume": "0.1.2"
+    "cuelume": "0.2.2"
   },
   "devDependencies": {
     "@weweb/cli": "latest"
