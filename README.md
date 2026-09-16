@@ -58,11 +58,14 @@ Browsers won't play anything until the user has interacted with the page at leas
 ### Properties
 
 - **Sounds enabled** (bindable) — global on/off. Bind it to a user-preference variable; this is the intended way to mute from a workflow.
+- **Volume** (bindable, 0–1, default 1) — global multiplier over every sound, attribute-triggered ones included. Bind it to a slider. Out-of-range or non-numeric values are clamped, and anything unusable falls back to 1 rather than silencing the app.
 - **Play in editor** (default off) — sounds only fire while editing if enabled. No effect on the published app.
+
+Both bindable properties drive module-level state in the library, so they apply app-wide the moment they change — there is nothing per-element to re-apply.
 
 ### Actions
 
-- **Play sound** — plays any sound from a dropdown. For what attributes can't reach: `success` after an API call resolves, `error` on a failed submit.
+- **Play sound** — plays any sound from a dropdown. For what attributes can't reach: `success` after an API call resolves, `error` on a failed submit. The second argument is an optional per-call volume (0–1) multiplied with the global one; leave it empty to use the global volume alone. An unknown sound name falls back to `chime`, and the action is silent while **Sounds enabled** is off.
 
 ## Development
 

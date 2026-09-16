@@ -23,6 +23,10 @@ export default {
           type: "select",
           options: SOUND_OPTIONS,
         },
+        {
+          name: "Volume",
+          type: "number",
+        },
       ],
     },
   ],
@@ -40,6 +44,23 @@ export default {
       propertyHelp: {
         tooltip:
           "Turns Cuelume playback on or off globally, for every element in the app.",
+      },
+      /* wwEditor:end */
+    },
+    volume: {
+      label: { en: "Volume" },
+      type: "Number",
+      options: { min: 0, max: 1, step: 0.05 },
+      bindable: true,
+      defaultValue: 1,
+      /* wwEditor:start */
+      bindingValidation: {
+        type: "number",
+        tooltip: "Bind to a number between 0 and 1 — e.g. a volume slider",
+      },
+      propertyHelp: {
+        tooltip:
+          "Global volume multiplier for every Cuelume sound, from 0 (silent) to 1. Values outside that range are clamped.",
       },
       /* wwEditor:end */
     },

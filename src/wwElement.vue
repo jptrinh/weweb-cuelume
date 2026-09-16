@@ -11,7 +11,16 @@
 
 <script>
 import { computed, onMounted, watch } from "vue";
-import { bind, play, setEnabled, sounds } from "cuelume";
+import { bind, play, setEnabled, setVolume, sounds } from "cuelume";
+
+// Volume is clamped to 0–1 by the engine, but a binding can hand us a string,
+// null, or NaN — anything unusable falls back rather than silencing the app.
+function toVolume(value, fallback) {
+  const number = typeof value === "string" ? parseFloat(value) : value;
+  return typeof number === "number" && Number.isFinite(number)
+    ? Math.min(1, Math.max(0, number))
+    : fallback;
+}
 
 /* wwEditor:start */
 // The editor evaluates this element in a different realm from the canvas DOM,
@@ -97,6 +106,8 @@ export default {
       return enabled;
     });
 
+    const volume = computed(() => toVolume(props.content?.volume, 1));
+
     watch(
       isActive,
       active => {
@@ -111,16 +122,20 @@ export default {
       { immediate: true }
     );
 
+    watch(volume, setVolume, { immediate: true });
+
     /* wwEditor:start */
     // Bound unconditionally: playback is still gated by setEnabled(), and the
     // per-event cost is irrelevant while editing.
     onMounted(() => bindRoot(wwLib.getFrontDocument()));
     /* wwEditor:end */
 
-    // A workflow can pass anything, including nothing: an unknown sound
-    // falls back to the engine's default rather than playing silence.
-    function playSound(sound) {
-      play(sounds.includes(sound) ? sound : "chime");
+    // A workflow can pass anything, including nothing: an unknown sound falls
+    // back to the engine's default and an unusable volume to the global one.
+    function playSound(sound, callVolume) {
+      const name = sounds.includes(sound) ? sound : "chime";
+      const level = toVolume(callVolume, null);
+      play(name, level === null ? undefined : { volume: level });
     }
 
     return { isActive, playSound };
