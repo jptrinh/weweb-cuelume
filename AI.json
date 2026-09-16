@@ -1,0 +1,73 @@
+{
+    "metadata": {
+        "name": "cuelume-element",
+        "description": "An invisible, drop-once initializer that adds curated interaction sounds to the whole app, synthesized live via the Web Audio API with no audio files.",
+        "keywords": [
+            "sound",
+            "audio",
+            "ui-sounds",
+            "haptics",
+            "feedback",
+            "cuelume"
+        ],
+        "features": [
+            "Document-wide delegated binding of data-cuelume-* attributes",
+            "17 synthesized sounds, no network requests and no audio assets",
+            "Global on/off, bindable to a user sound-preference variable",
+            "Global volume, bindable to a slider",
+            "Play any sound imperatively from a workflow",
+            "Optional playback while editing"
+        ]
+    },
+    "properties": [
+        {
+            "name": "enabled",
+            "description": "Global on/off for every Cuelume sound in the app. Bind it to a user sound-preference variable; this is the intended way to mute from a workflow.",
+            "type": "boolean",
+            "defaultValue": true
+        },
+        {
+            "name": "volume",
+            "description": "Global volume multiplier for every Cuelume sound, from 0 (silent) to 1. Values outside that range are clamped.",
+            "type": "number",
+            "defaultValue": 1
+        },
+        {
+            "name": "playInEditor",
+            "description": "Play sounds while editing this page. Has no effect on the published app.",
+            "type": "boolean",
+            "defaultValue": false
+        }
+    ],
+    "states": [],
+    "events": [],
+    "actions": [
+        {
+            "label": "Play sound",
+            "actionName": "playSound",
+            "description": "Plays one sound immediately. For cues no attribute can reach, such as success after an API call resolves or error on a failed submit. Silent while the element is disabled.",
+            "args": [
+                {
+                    "name": "Sound",
+                    "type": "string",
+                    "description": "One of: chime, sparkle, droplet, bloom, whisper, tick, press, release, toggle, success, error, page, loading, ready, pulse, scan, arrival. An unknown name falls back to chime."
+                },
+                {
+                    "name": "Volume",
+                    "type": "number",
+                    "description": "Optional volume for this one sound, 0 to 1, multiplied with the global volume. Leave empty to use the global volume alone."
+                }
+            ]
+        }
+    ],
+    "slots": [],
+    "variables": [],
+    "specifications": [
+        "The element renders nothing in the published app — place a single instance on a layout or shared section, never one per page. The library's enabled flag is global state, so two instances are last-writer-wins.",
+        "It emits no sound by itself. To make an element audible, add a data-cuelume-* HTML attribute to that element: data-cuelume-hover (pointerenter, fine mouse only, throttled to 150ms), data-cuelume-press (pointerdown), data-cuelume-release (pointerup), data-cuelume-toggle (click).",
+        "Give an attribute a value to override the default sound — data-cuelume-hover=\"tick\" — or leave it empty for the default. Unrecognized names are a silent no-op.",
+        "Listeners are delegated on the document, so elements added later (collection lists, modals, anything conditional) work with no rescan.",
+        "Browsers play nothing until the user has interacted with the page at least once. A hover sound before any click is a deliberate no-op, not a bug."
+    ],
+    "examples": []
+}
