@@ -14,12 +14,14 @@ export default {
     {
       label: { en: "Play sound" },
       action: "playSound",
+      // Action args use `select` with a flat `options` array — not the
+      // `TextSelect` / `options: { options }` shape properties use. See
+      // ww-input-rich-text's setTag/setTextAlign.
       args: [
         {
-          name: "sound",
-          type: "TextSelect",
-          options: { options: SOUND_OPTIONS },
-          defaultValue: "chime",
+          name: "Sound",
+          type: "select",
+          options: SOUND_OPTIONS,
         },
       ],
     },

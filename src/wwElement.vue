@@ -115,7 +115,13 @@ export default {
     onMounted(() => bindRoot(wwLib.getFrontDocument()));
     /* wwEditor:end */
 
-    return { isActive, playSound: play };
+    // A workflow can pass anything, including nothing: an unknown sound
+    // falls back to the engine's default rather than playing silence.
+    function playSound(sound) {
+      play(sounds.includes(sound) ? sound : "chime");
+    }
+
+    return { isActive, playSound };
   },
 };
 </script>
